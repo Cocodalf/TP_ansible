@@ -1,0 +1,61 @@
+---
+- hosts: servers
+  remote_user: root
+  tasks:
+  # Installation des dernieres versions de nginx et curl via apt 
+    - name: installation de nginx
+      apt:
+        name: nginx
+        state: latest
+
+    - name: installation de curl
+      apt:
+        name: curl
+        state: latest
+
+  # Récupération d'un srcipt pour installer nodesource sous Debian
+    - name: installation nodesource debian
+      shell: curl -sL https://deb.nodesource.com/setup_8.x | sh
+
+  # Installation de nodejs et npm via apt 
+    - name: installation nodejs npm
+      apt:
+        name: nodejs
+        state: latest
+
+  #Installation de Git via apt 
+    - name: installation git
+      apt:
+        name: git
+        state: latest
+
+  #Clone du depot contanant le projet nodejs
+    - name: clone project nodejs
+      git:
+        repo: https://git.mrzee.fr/student/my-node-project.git
+        dest: /var/www/my-node-project
+
+  #Reviens à faire npm install dans le dossier indique
+    - name: installation dep nodejs 
+      npm:
+        path: /var/www/my-node-project/myapp/
+
+  #Installation de Pm2
+    - name: installation pm2 en global
+      npm:
+         name: pm2
+         global: yes
+
+  #Lancement appli via pm2
+    - name: start appli nodejs
+      shell: pm2 start /var/www/my-node-project/myapp/bin/www
+
+  
+  #Copie du fichier vhost à place du fichier default
+    - name: copie de vhost vers nginx sites-enabled
+      shell: cp /var/www/my-node-project/vhost /etc/nginx/sites-enabled/default
+
+
+  #Redemarage de nginx
+    - name: redemare nginx
+      shell: service nginx restart
